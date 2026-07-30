@@ -6,6 +6,8 @@ import { EventStream } from '@openrouter/sdk/lib/event-streams';
 import { getSystemPrompt } from './prompts.js';
 import express from 'express'
 import { BASE_PROMPT } from './prompts.js'
+import { basePrompt as nodeBasePrompt } from './defaults/node.js'
+import { basePrompt as reactBasePrompt } from './defaults/react.js'
 const PORT = 8000
 
 
@@ -20,50 +22,73 @@ const app = express()
 
 app.use(express.json())
 
-app.post('/template', (req, res) => {
+// app.post('/template', (req, res) => {
 
-    let prompt = req.body.prompt
+//     let prompt = req.body.prompt
 
-    console.log(prompt)
+//     console.log(prompt)
 
-    //deciding which stack to make the app in 
+//     //deciding which stack to make the app in 
 
-    async function getStack() {
-        const stream = await openrouter.chat.send({
-            chatRequest: {
-                model: "poolside/laguna-m.1:free",
-                messages: [
-                    { role: "user", content: prompt },
-                    {
-                        role: "developer", content: "only give response in word analyzing if user is asking to make website in node or react and it should only be one word "
-                    }
-                ],
-                stream: false as const,
-            }
-        });
+//     async function getStack() {
+//         const stream = await openrouter.chat.send({
+//             chatRequest: {
+//                 model: "poolside/laguna-m.1:free",
+//                 models: ["first model ", "second model", "third model "],
+//                 messages: [
+//                     { role: "user", content: prompt },
+//                     {
+//                         role: "developer", content: "only give response in word analyzing if user is asking to make website in node or react and it should only be one word "
+//                     }
+//                 ],
+//                 stream: false as const,
+//             }
+//         });
 
-        if ("choices" in stream) {
-            const content = stream.choices[0]?.message?.content;
-            console.log(content);
-            if (content == 'node' || content == 'react') {
-
-            } else {
-                res.status(400).json({
-                    msg: 'stack not found'
-                })
-            }
-
-        }
+//         if ("choices" in stream) {
+//             let content = stream.choices[0]?.message?.content;
+//             if (content && typeof content == 'string') {
+//                 content = content.toLowerCase().replace(/\s/g, '')
+//                 // console.log(content);
 
 
+//                 if (content == "react") {
+//                     res.json({
+//                         prompts: [BASE_PROMPT, `Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${reactBasePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`],
+//                         uiPrompts: [reactBasePrompt]
+//                     })
+//                     return;
+//                 }
 
-    }
+//                 if (content === "node") {
+//                     res.json({
+//                         prompts: [`Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${nodeBasePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`],
+//                         uiPrompts: [nodeBasePrompt]
+//                     })
+//                     return;
+//                 } else {
+//                     res.status(400).json({
+//                         msg: 'stack not found'
+//                     })
+//                     return
+//                 }
 
-    getStack()
 
-}
 
-)
+
+
+//             }
+//         }
+
+
+
+//     }
+
+//     getStack()
+
+// })
+
+
 
 
 
@@ -72,11 +97,11 @@ async function main() {
 
     const stream = await openrouter?.chat?.send({
         chatRequest: {
-            model: "tencent/hy3:free",
+            model: "inclusionai/ling-3.0-flash:free",
             messages: [
                 { role: "system", content: getSystemPrompt() },
                 {
-                    role: "user",
+                    role: "developer",
                     content: "You are a helpful coding assistant. Only respond with code, no explanations."
                 },
                 {
@@ -106,8 +131,37 @@ async function main() {
 }
 
 
-// main()
+main()
 
+// app.post('/chat', async (req, res) => {
+
+//     let chat = req.body.chat
+//     //chat is a array of 3 objects on the first 2 indexes it contains the object containing the artifact (default files of either react or node ) and one second index it should contain object with base prompt to create a clean website based on if its from react 
+
+//     // const messages = [
+//     //     { role: "user", content: stack === "react" ? REACT_BASE_PROMPT : NODE_BASE_PROMPT }, // message 1
+//     //     { role: "user", content: STYLE_INSTRUCTIONS }, // message 2, matches this doc exactly
+//     //     { role: "user", content: userPrompt } // message 3, the real request
+//     // ];
+
+//     const stream = await openrouter.chat.send({
+//         chatRequest: {
+//             model: "poolside/laguna-m.1:free",
+//             messages: [
+//                 { role: "user", content: messages },
+//                 // {
+//                 //     role: "developer", content: ""
+//                 // }
+//             ],
+//             system: getSystemPrompt(),
+//             stream: true,
+//         }
+//     }) as EventStream<models.ChatStreamChunk>
+
+
+
+
+// })
 
 app.listen(PORT, () => {
     console.log("server on PORT", PORT)
