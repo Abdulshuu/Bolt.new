@@ -1,3 +1,13 @@
+export interface FileNode {
+    name: string;
+    type: 'file' | 'folder';
+    children?: FileNode[];
+    content?: string;
+}
+export interface mainNode {
+    path: string;
+    content: string;
+}
 export declare enum StepType {
     CreateFile = 0,
     CreateFolder = 1,

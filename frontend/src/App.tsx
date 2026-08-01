@@ -29,6 +29,7 @@ export default function App() {
 
   // };
   const result = useCreateGeneration(prompt)
+
   // console.log(result)
 
 

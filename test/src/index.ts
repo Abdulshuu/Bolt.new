@@ -1,48 +1,5 @@
 
 
-
-// function buildFileTree(files: { path: string; content: string }[]): FileNode[] {
-//   const root: FileNode[] = [];
-
-//   for (const file of files) {
-//     const parts = file.path.split('/'); // e.g. ["src", "components", "Hero.tsx"]
-//     let currentLevel = root;
-
-//     parts.forEach((part, index) => {
-//       const isLastPart = index === parts.length - 1;
-
-//       // Look for an existing node at this level with this name
-//       let existingNode = currentLevel.find((node) => node.name === part);
-
-//       if (!existingNode) {
-//         if (isLastPart) {
-//           // It's the file itself
-//           existingNode = {
-//             name: part,
-//             type: 'file',
-//             content: file.content,
-//           };
-//         } else {
-//           // It's a folder we need to create
-//           existingNode = {
-//             name: part,
-//             type: 'folder',
-//             children: [],
-//           };
-//         }
-//         currentLevel.push(existingNode);
-//       }
-
-//       // Move into this folder's children for the next iteration
-//       if (!isLastPart && existingNode.children) {
-//         currentLevel = existingNode.children;
-//       }
-//     });
-//   }
-
-//   return root;
-// }
-
 let LLMres = `
 
 <boltArtifact id="todo-app" title="Todo App with React and Vite">
@@ -565,6 +522,18 @@ npx vite --host 0.0.0.0 --port 3000
 </boltArtifact>
 `
 // ---------- Types ----------
+
+export interface FileNode {
+    name: string,
+    type: 'file' | 'folder',
+    children?: FileNode[],
+    content?: string //code 
+}
+
+export interface mainNode {
+    path: string,
+    content: string
+}
 export enum StepType {
     CreateFile,
     CreateFolder,
@@ -600,6 +569,7 @@ export interface FileViewerProps {
     file: FileItem | null;
     onClose: () => void;
 }
+
 // ---------- Step 1: Extract steps from raw LLM response ----------
 export function parseXml(response: string): Step[] | undefined {
     // Extract the XML content between <boltArtifact> tags
@@ -661,17 +631,32 @@ export function parseXml(response: string): Step[] | undefined {
         return steps;
     }
 }
+// function getTitleAndCode(steps: Step[]): mainNode[] | undefined {
+//     if (typeof steps != 'undefined') {
+//         let projSteps: Array<mainNode> = []
+
+//         //mapping over step that we get from the function of applying bunch of regex on response of llm which essentially contain object having properties like { id , title , code , filePath , status? }
+//         //we get only the title and the code and save it in a seperate array which only contains objects containing keys code and title which will be used to pass into anohter object which will create a structure that is required by our frontend 
+//         steps.map((obj) => {
+
+//             let { title, code } = obj
+//             if (typeof title != 'undefined' && typeof code != 'undefined') {
+//                 let mainTitle: string = title.split(' ').slice(1).join(' ')
+//                 projSteps.push({ path: mainTitle, content: code })
+
+//             }
+//         }
+//         )
+//         // console.log(projSteps)
+//         return projSteps
+//     }
+
+// }
 
 let steps = parseXml(LLMres)
-if (typeof steps != 'undefined') {
-    let projSteps: Array<string> = []
-    steps.map((obj) => {
-        if (typeof obj['title'] != 'undefined') {
-            projSteps.push(obj['title'])
-        }
-    })
-    console.log(projSteps)
-}
+console.log(steps)
+// let mainTitleAndCode: mainNode[] | undefined = typeof steps !== 'undefined' ? getTitleAndCode(steps) : undefined;
+
 
 
 // ---------- Step 2: Turn the flat file steps into a nested tree ----------
@@ -703,6 +688,15 @@ if (typeof steps != 'undefined') {
 
 //     return root;
 // }
+// let result: any = [];
+// result = mainTitleAndCode ? buildFileTree(mainTitleAndCode) : undefined
+// console.log(result)
+
+
+
+
+
+
 
 // ---------- Step 3: Glue them together ----------
 
@@ -739,3 +733,359 @@ if (typeof steps != 'undefined') {
 //     children : []
 //   }
 // ]
+
+
+
+
+
+//   {
+//       name: 'src',
+//       type: 'folder',
+//       children: [
+//         {
+//           name: 'components',
+//           type: 'folder',
+//           children: [
+//             {
+//               name: 'Hero.tsx',
+//               type: 'file',
+//               content: `export default function Hero() {
+//     return (
+//     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+//       <div className="text-center px-6">
+//         <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight">
+//           ${prompt.slice(0, 40) || 'Welcome'}
+//         </h1>
+//         <p className="mt-6 text-lg text-slate-300 max-w-xl mx-auto">
+//           A beautifully crafted landing page generated from your prompt.
+//         </p>
+//         <button className="mt-8 px-8 py-3 bg-white text-slate-900 rounded-lg font-medium hover:bg-slate-100 transition">
+//           Get Started
+//         </button>
+//       </div>
+//     </section>
+//   );
+// }
+// `,
+//             },
+//             {
+//               name: 'Navbar.tsx',
+//               type: 'file',
+//               content: `export default function Navbar() {
+//   return (
+//     <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-slate-200">
+//       <span className="font-bold text-xl text-slate-900">${name}</span>
+//       <div className="flex gap-6 text-sm text-slate-600">
+//         <a href="#" className="hover:text-slate-900">Home</a>
+//         <a href="#" className="hover:text-slate-900">About</a>
+//         <a href="#" className="hover:text-slate-900">Contact</a>
+//       </div>
+//     </nav>
+//   );
+// }
+// `,
+//             },
+//           ],
+//         },
+//         {
+//           name: 'App.tsx',
+//           type: 'file',
+//           content: `import Navbar from './components/Navbar';
+// import Hero from './components/Hero';
+
+// export default function App() {
+//   return (
+//     <div className="min-h-screen bg-white">
+//       <Navbar />
+//       <Hero />
+//     </div>
+//   );
+// }
+// `,
+//         },
+//         {
+//           name: 'main.tsx',
+//           type: 'file',
+//           content: `import { StrictMode } from 'react';
+// import { createRoot } from 'react-dom/client';
+// import App from './App';
+// import './index.css';
+
+// createRoot(document.getElementById('root')!).render(
+//   <StrictMode>
+//     <App />
+//   </StrictMode>
+// );
+// `,
+//         },
+//         {
+//           name: 'index.css',
+//           type: 'file',
+//           content: `@tailwind base;
+// @tailwind components;
+// @tailwind utilities;
+// `,
+//         },
+//       ],
+//     },
+//     {
+//       name: 'index.html',
+//       type: 'file',
+//       content: `<!doctype html>
+// <html lang="en">
+//   <head>
+//     <meta charset="UTF-8" />
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+//     <title>${name}</title>
+//   </head>
+//   <body>
+//     <div id="root"></div>
+//     <script type="module" src="/src/main.tsx"></script>
+//   </body>
+// </html>
+// `,
+//     },
+//     {
+//       name: 'package.json',
+//       type: 'file',
+//       content: `{
+//   "name": "${name}",
+//   "private": true,
+//   "version": "0.0.0",
+//   "type": "module",
+//   "scripts": {
+//     "dev": "vite",
+//     "build": "vite build"
+//   },
+//   "dependencies": {
+//     "react": "^18.3.1",
+//     "react-dom": "^18.3.1"
+//   }
+// }
+// `,
+//     },
+//     {
+//       name: 'vite.config.ts',
+//       type: 'file',
+//       content: `import { defineConfig } from 'vite';
+// import react from '@vitejs/plugin-react';
+
+// export default defineConfig({
+//   plugins: [react()],
+// });
+// `,
+//     },
+
+
+    // function parseXml(response: string): Step[] | undefined {
+    //   // Extract the XML content between <boltArtifact> tags
+    //   const xmlMatch = response.match(/<boltArtifact[^>]*>([\s\S]*?)<\/boltArtifact>/);
+
+    //   if (!xmlMatch) {
+    //     return [];
+    //   }
+
+    //   const xmlContent = xmlMatch[1];
+    //   const steps: Step[] = [];
+    //   let stepId = 1;
+
+    //   // Extract artifact title
+    //   const titleMatch = response.match(/title="([^"]*)"/);
+    //   const artifactTitle = titleMatch ? titleMatch[1] : 'Project Files';
+
+    //   // Add initial artifact step
+    //   steps.push({
+    //     id: stepId++,
+    //     title: artifactTitle,
+    //     description: '',
+    //     type: StepType.CreateFolder,
+    //     status: 'pending'
+    //   });
+
+    //   // Regular expression to find boltAction elements
+    //   const actionRegex = /<boltAction\s+type="([^"]*)"(?:\s+filePath="([^"]*)")?>([\s\S]*?)<\/boltAction>/g;
+
+    //   if (typeof xmlContent !== 'undefined') {
+    //     let match;
+    //     while ((match = actionRegex.exec(xmlContent)) !== null) {
+    //       const [, type, filePath, content] = match;
+
+    //       if (type === 'file') {
+    //         // File creation step
+    //         steps.push({
+    //           id: stepId++,
+    //           title: `Create ${filePath || 'file'}`,
+    //           description: '',
+    //           type: StepType.CreateFile,
+    //           status: 'pending',
+    //           code: content?.trim(),
+    //           path: filePath
+    //         });
+    //       } else if (type === 'shell') {
+    //         // Shell command step
+    //         steps.push({
+    //           id: stepId++,
+    //           title: 'Run command',
+    //           description: '',
+    //           type: StepType.RunScript,
+    //           status: 'pending',
+    //           code: content?.trim()
+    //         });
+    //       }
+    //     }
+
+    //     return steps;
+    //   }
+    // }
+
+    // let steps = parseXml(LLMres)
+
+
+
+    // if (typeof steps != 'undefined') {
+    //   steps.map((obj) => {
+    //     if (typeof obj['title'] != 'undefined') {
+    //       const { title, description, id, status } = obj
+    //       setProjSteps((prev) => [...prev, { title, detail: '', id, status }]);
+    //     }
+    //   })
+    // }
+
+
+    // {
+      //       name: 'src',
+      //       type: 'folder',
+      //       children: [
+      //         {
+      //           name: 'components',
+      //           type: 'folder',
+      //           children: [
+      //             {
+      //               name: 'Hero.tsx',
+      //               type: 'file',
+      //               content: `export default function Hero() {
+      //     return (
+      //     <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+      //       <div className="text-center px-6">
+      //         <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight">
+      //           \${prompt.slice(0, 40) || 'Welcome'}
+      //         </h1>
+      //         <p className="mt-6 text-lg text-slate-300 max-w-xl mx-auto">
+      //           A beautifully crafted landing page generated from your prompt.
+      //         </p>
+      //         <button className="mt-8 px-8 py-3 bg-white text-slate-900 rounded-lg font-medium hover:bg-slate-100 transition">
+      //           Get Started
+      //         </button>
+      //       </div>
+      //     </section>
+      //   );
+      // }
+      // `,
+      //             },
+      //             {
+      //               name: 'Navbar.tsx',
+      //               type: 'file',
+      //               content: `export default function Navbar() {
+      //   return (
+      //     <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-slate-200">
+      //       <span className="font-bold text-xl text-slate-900">${name}</span>
+      //       <div className="flex gap-6 text-sm text-slate-600">
+      //         <a href="#" className="hover:text-slate-900">Home</a>
+      //         <a href="#" className="hover:text-slate-900">About</a>
+      //         <a href="#" className="hover:text-slate-900">Contact</a>
+      //       </div>
+      //     </nav>
+      //   );
+      // }
+      // `,
+      //             },
+      //           ],
+      //         },
+      //         {
+      //           name: 'App.tsx',
+      //           type: 'file',
+      //           content: `import Navbar from './components/Navbar';
+      // import Hero from './components/Hero';
+      
+      // export default function App() {
+      //   return (
+      //     <div className="min-h-screen bg-white">
+      //       <Navbar />
+      //       <Hero />
+      //     </div>
+      //   );
+      // }
+      // `,
+      //         },
+      //         {
+      //           name: 'main.tsx',
+      //           type: 'file',
+      //           content: `import { StrictMode } from 'react';
+      // import { createRoot } from 'react-dom/client';
+      // import App from './App';
+      // import './index.css';
+      
+      // createRoot(document.getElementById('root')!).render(
+      //   <StrictMode>
+      //     <App />
+      //   </StrictMode>
+      // );
+      // `,
+      //         },
+      //         {
+      //           name: 'index.css',
+      //           type: 'file',
+      //           content: `@tailwind base;
+      // @tailwind components;
+      // @tailwind utilities;
+      // `,
+      //         },
+      //       ],
+      //     },
+      //     {
+      //       name: 'index.html',
+      //       type: 'file',
+      //       content: `<!doctype html>
+      // <html lang="en">
+      //   <head>
+      //     <meta charset="UTF-8" />
+      //     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      //     <title>\${name}</title>
+      //   </head>
+      //   <body>
+      //     <div id="root"></div>
+      //     <script type="module" src="/src/main.tsx"></script>
+      //   </body>
+      // </html>
+      // `,
+      //     },
+      //     {
+      //       name: 'package.json',
+      //       type: 'file',
+      //       content: `{
+      //   "name": "${name}",
+      //   "private": true,
+      //   "version": "0.0.0",
+      //   "type": "module",
+      //   "scripts": {
+      //     "dev": "vite",
+      //     "build": "vite build"
+      //   },
+      //   "dependencies": {
+      //     "react": "^18.3.1",
+      //     "react-dom": "^18.3.1"
+      //   }
+      // }
+      // `,
+      //     },
+      //     {
+      //       name: 'vite.config.ts',
+      //       type: 'file',
+      //       content: `import { defineConfig } from 'vite';
+      // import react from '@vitejs/plugin-react';
+      
+      // export default defineConfig({
+      //   plugins: [react()],
+      // });
+      // `,
+      //     },
